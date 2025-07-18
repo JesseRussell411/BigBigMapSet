@@ -109,7 +109,7 @@ export class BigMap<K, V> extends Map<K, V> {
 
         // replace value if found in any chunk other than the final one
         for (let i = 0; i < finalIndex; i++) {
-            const chunk = this.chunks[i];
+            const chunk = this.chunks[i]!;
             if (chunk.has(key)) {
                 chunk.set(key, value);
                 return this;
@@ -297,7 +297,7 @@ export class BigSet<V> extends Set<V> {
 
         // check if value already exists in any chunk other than the final one
         for (let i = 0; i < finalIndex; i++) {
-            const chunk = this.chunks[i];
+            const chunk = this.chunks[i]!;
             if (chunk.has(value)) {
                 return this;
             }
