@@ -92,7 +92,6 @@ export class BigMap<K, V> extends Map<K, V> {
                 chunk.set(key, value);
                 return true;
             }
-            return true;
         } catch (e) {
             if (e instanceof RangeError) {
                 // cache max size for later
@@ -282,7 +281,6 @@ export class BigSet<V> extends Set<V> {
                 chunk.add(value);
                 return true;
             }
-            return true;
         } catch (e) {
             if (e instanceof RangeError) {
                 // cache max size for later
