@@ -2,17 +2,11 @@
  * Extension of {@link Map} with no size limit.
  */
 export class BigMap<K, V> extends Map<K, V> {
-    /** The maximum size of a {@link Map} in the current runtime. {@link Number.MAX_SAFE_INTEGER} indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
-    private static maxChunkSize: number = Number.MAX_SAFE_INTEGER;
-
     /** Where the entries are actually stored. The base {@link Map} this {@link BigMap} extends is left empty. */
     private readonly chunks: Map<K, V>[] = [];
-    /** Rough indication of how many entries have been deleted, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better entry packing, not a rule. */
-    private buriedDeletions: number = 0;
 
     public clear(): void {
         this.chunks.length = 0;
-        this.buriedDeletions = 0;
     }
 
     public constructor(entries?: Iterable<readonly [K, V]>) {
@@ -23,7 +17,6 @@ export class BigMap<K, V> extends Map<K, V> {
             for (const chunk of entries.chunks) {
                 this.chunks.push(new Map(chunk))
             }
-            this.buriedDeletions = entries.buriedDeletions;
         } else if (entries instanceof Map) {
             // clone
             this.chunks.push(new Map(entries));
@@ -64,45 +57,20 @@ export class BigMap<K, V> extends Map<K, V> {
     }
 
     public delete(key: K): boolean {
-        const finalIndex = this.chunks.length - 1;
+        const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
 
         for (let i = 0; i <= finalIndex; i++) {
             const chunk = this.chunks[i]!;
 
             if (chunk.delete(key)) {
+                // delete chunk if empty
                 if (chunk.size === 0) {
                     this.chunks.splice(i, 1);
                     // deleting from chunks messes up iteration
                     // but it's fine because the function is exiting now anyway.
-                } else if (i < finalIndex) {
-                    this.buriedDeletions++;
                 }
                 return true;
             }
-        }
-        return false;
-    }
-
-    /**
-     * Tries to add the key and value to the chunk.
-     * 
-     * Assumes that the key does not already exist in the chunk.
-     * 
-     * @returns Whether the key and value was successfully added to the chunk; else, the chunk is full.
-     */
-    private trySet(chunk: Map<K, V>, key: K, value: V): boolean {
-        try {
-            if (chunk.size < BigMap.maxChunkSize) {
-                chunk.set(key, value);
-                return true;
-            }
-        } catch (e) {
-            if (e instanceof RangeError) {
-                // cache max size for later
-                // because error handling is really slow
-                // and comparisons are really fast
-                BigMap.maxChunkSize = chunk.size;
-            } else throw e;
         }
         return false;
     }
@@ -111,7 +79,7 @@ export class BigMap<K, V> extends Map<K, V> {
         if (this.chunks.length > 0) {
             const finalIndex = this.chunks.length - 1;
 
-            // replace value if found in any chunk other than the final one
+            // replace entry if found in any chunk other than the final one
             for (let i = 0; i < finalIndex; i++) {
                 const chunk = this.chunks[i]!;
                 if (chunk.has(key)) {
@@ -120,40 +88,15 @@ export class BigMap<K, V> extends Map<K, V> {
                 }
             }
 
-            const finalChunk = this.chunks[finalIndex]!
-
-            // check for buried deletions
-            if (this.buriedDeletions > 0) {
-                // replace value if found in final chunk
-                if (finalChunk.has(key)) {
-                    finalChunk.set(key, value);
-                    return this;
-                }
-
-                // try to add entry to each buried chunk
-                // there might be free spaces in them according to he check above
-                for (let i = 0; i < finalIndex; i++) {
-                    const chunk = this.chunks[i]!;
-
-                    if (this.trySet(chunk, key, value)) {
-                        // entry added
-                        // definitely not replaced
-                        // because we already try replacing existing entries
-
-                        // one less buried deletion
-                        this.buriedDeletions--;
-                        return this;
-                    }
-                }
-
-                // definitely no buried deletions, even though there's recorded to be some
-                // (occurs if the chunk with the deletions was dropped)
-                this.buriedDeletions = 0;
-            }
-
-            // try to add entry to final chunk
-            if (this.trySet(finalChunk, key, value)) {
+            // try to add entry to the final chunk
+            const finalChunk = this.chunks[finalIndex]!;
+            try {
+                finalChunk.set(key, value);
                 return this;
+            } catch (e) {
+                if (e instanceof RangeError) {
+                    // do nothing
+                } else throw e;
             }
         }
 
@@ -209,17 +152,11 @@ export class BigMap<K, V> extends Map<K, V> {
  * Extension of {@link Set} with no size limit.
  */
 export class BigSet<V> extends Set<V> {
-    /** The maximum size of a {@link Set} in the current runtime. {@link Number.MAX_SAFE_INTEGER} indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
-    private static maxChunkSize: number = Number.MAX_SAFE_INTEGER;
-
     /** Where the values are actually stored. The base {@link Set} this {@link BigSet} extends is left empty. */
     private readonly chunks: Set<V>[] = [];
-    /** Rough indication of how many values have been deleted, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better value packing, not a rule. */
-    private buriedDeletions: number = 0;
 
     public clear(): void {
         this.chunks.length = 0;
-        this.buriedDeletions = 0;
     }
 
     public constructor(values?: Iterable<V>) {
@@ -230,7 +167,6 @@ export class BigSet<V> extends Set<V> {
             for (const chunk of values.chunks) {
                 this.chunks.push(new Set(chunk));
             }
-            this.buriedDeletions = values.buriedDeletions;
         } else if (values instanceof Set) {
             // clone
             this.chunks.push(new Set(values));
@@ -261,97 +197,49 @@ export class BigSet<V> extends Set<V> {
     }
 
     public delete(value: V): boolean {
-        const finalIndex = this.chunks.length - 1;
+        const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
 
         for (let i = 0; i <= finalIndex; i++) {
             const chunk = this.chunks[i]!;
 
             if (chunk.delete(value)) {
+                // delete chunk if empty
                 if (chunk.size === 0) {
                     this.chunks.splice(i, 1);
                     // deleting from chunks messes up iteration
                     // but it's fine because the function is exiting now anyway.
-                } else if (i < finalIndex) {
-                    this.buriedDeletions++;
                 }
                 return true;
             }
-        }
-        return false;
-    }
-
-    /**
-     * Tries to add the value to the chunk.
-     * 
-     * Assumes that the value does not already exist in the chunk.
-     * 
-     * @returns Whether the value was successfully added to the chunk; else, the chunk is full.
-     */
-    private tryAdd(chunk: Set<V>, value: V): boolean {
-        try {
-            if (chunk.size < BigSet.maxChunkSize) {
-                chunk.add(value);
-                return true;
-            }
-        } catch (e) {
-            if (e instanceof RangeError) {
-                // cache max size for later
-                // because error handling is really slow
-                // and comparisons are really fast
-                BigSet.maxChunkSize = chunk.size;
-            } else throw e;
         }
         return false;
     }
 
     public add(value: V): this {
         if (this.chunks.length > 0) {
-            const finalIndex = this.chunks.length - 1;
+            const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
 
-            // check if value already exists in any chunk other than the final one
+            // check if found in any chunk other than the final one
             for (let i = 0; i < finalIndex; i++) {
                 const chunk = this.chunks[i]!;
                 if (chunk.has(value)) {
+                    chunk.add(value); // just in case
                     return this;
                 }
             }
 
-            const finalChunk = this.chunks[finalIndex]!
-
-            // check for buried deletions
-            if (this.buriedDeletions > 0) {
-                // check if value already exists in final chunk
-                if (finalChunk.has(value)) {
-                    return this;
-                }
-
-                // try to add entry to each buried chunk
-                // there might be free spaces in them according to he check above
-                for (let i = 0; i < finalIndex; i++) {
-                    const chunk = this.chunks[i]!;
-
-                    if (this.tryAdd(chunk, value)) {
-                        // value added
-                        // definitely not replaced
-                        // because we already checked for existing values
-
-                        // one less buried deletion
-                        this.buriedDeletions--;
-                        return this;
-                    }
-                }
-
-                // definitely no buried deletions, even though there's recorded to be some
-                // (occurs if the chunk with the deletions was dropped)
-                this.buriedDeletions = 0;
-            }
-
-            // try to add entry to final chunk
-            if (this.tryAdd(finalChunk, value)) {
+            // try to add entry to the final chunk
+            const finalChunk = this.chunks[finalIndex]!;
+            try {
+                finalChunk.add(value);
                 return this;
+            } catch (e) {
+                if (e instanceof RangeError) {
+                    // do nothing
+                } else throw e;
             }
         }
-    
+
         // out of space. make new chunk
         const newChunk = new Set<V>();
         newChunk.add(value);
