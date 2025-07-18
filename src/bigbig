@@ -2,8 +2,8 @@
  * Extension of {@link Map} with no size limit.
  */
 export class BigMap<K, V> extends Map<K, V> {
-    /** The maximum size of a {@link Map} in the current runtime. 0 indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
-    private static maxChunkSize: number = 0;
+    /** The maximum size of a {@link Map} in the current runtime. {@link Number.MAX_SAFE_INTEGER} indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
+    private static maxChunkSize: number = Number.MAX_SAFE_INTEGER;
 
     /** Where the entries are actually stored. The base {@link Map} this {@link BigMap} extends is left empty. */
     private readonly chunks: Map<K, V>[] = [];
@@ -87,24 +87,21 @@ export class BigMap<K, V> extends Map<K, V> {
      * @returns Whether the key and value was successfully added to the chunk; else, the chunk is full.
      */
     private trySet(chunk: Map<K, V>, key: K, value: V): boolean {
-        if (BigMap.maxChunkSize !== 0) {
+        try {
             if (chunk.size < BigMap.maxChunkSize) {
                 chunk.set(key, value);
                 return true;
             }
-        } else {
-            try {
-                chunk.set(key, value);
-                return true;
-            } catch (e) {
-                if (e instanceof RangeError) {
-                    // cache max size for later
-                    // because error handling is really slow
-                    // and comparisons are really fast
-                    BigMap.maxChunkSize = chunk.size;
-                } else throw e;
-            }
+            return true;
+        } catch (e) {
+            if (e instanceof RangeError) {
+                // cache max size for later
+                // because error handling is really slow
+                // and comparisons are really fast
+                BigMap.maxChunkSize = chunk.size;
+            } else throw e;
         }
+
         return false;
     }
 
@@ -204,8 +201,8 @@ export class BigMap<K, V> extends Map<K, V> {
  * Extension of {@link Set} with no size limit.
  */
 export class BigSet<V> extends Set<V> {
-    /** The maximum size of a {@link Set} in the current runtime. 0 indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
-    private static maxChunkSize: number = 0;
+    /** The maximum size of a {@link Set} in the current runtime. {@link Number.MAX_SAFE_INTEGER} indicates unknown (use try-catch and cache discovered maximum size for later with this field) */
+    private static maxChunkSize: number = Number.MAX_SAFE_INTEGER;
 
     /** Where the values are actually stored. The base {@link Set} this {@link BigSet} extends is left empty. */
     private readonly chunks: Set<V>[] = [];
@@ -280,23 +277,19 @@ export class BigSet<V> extends Set<V> {
      * @returns Whether the value was successfully added to the chunk; else, the chunk is full.
      */
     private tryAdd(chunk: Set<V>, value: V): boolean {
-        if (BigSet.maxChunkSize !== 0) {
+        try {
             if (chunk.size < BigSet.maxChunkSize) {
                 chunk.add(value);
                 return true;
             }
-        } else {
-            try {
-                chunk.add(value);
-                return true;
-            } catch (e) {
-                if (e instanceof RangeError) {
-                    // cache max size for later
-                    // because error handling is really slow
-                    // and comparisons are really fast
-                    BigSet.maxChunkSize = chunk.size;
-                } else throw e;
-            }
+            return true;
+        } catch (e) {
+            if (e instanceof RangeError) {
+                // cache max size for later
+                // because error handling is really slow
+                // and comparisons are really fast
+                BigSet.maxChunkSize = chunk.size;
+            } else throw e;
         }
         return false;
     }
