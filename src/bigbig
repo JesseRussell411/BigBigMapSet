@@ -7,13 +7,11 @@ export class BigMap<K, V> extends Map<K, V> {
 
     /** Where the entries are actually stored. The base {@link Map} this {@link BigMap} extends is left empty. */
     private readonly chunks: Map<K, V>[] = [];
-    /** Rough indication of how many entries have been delete, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better entry packing, not a rule. */
+    /** Rough indication of how many entries have been deleted, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better entry packing, not a rule. */
     private buriedDeletions: number = 0;
 
     public clear(): void {
-        for (const chunk of this.chunks) {
-            chunk.clear();
-        }
+        this.chunks.length = 0;
         this.buriedDeletions = 0;
     }
 
@@ -31,11 +29,14 @@ export class BigMap<K, V> extends Map<K, V> {
 
         if (entries instanceof BigMap) {
             // clone
-            for(const chunk of entries.chunks) {
+            for (const chunk of entries.chunks) {
                 this.chunks.push(new Map(chunk))
             }
             this.buriedDeletions = entries.buriedDeletions;
-        } else if  (entries !== undefined) {
+        } else if (entries instanceof Map) {
+            // clone
+            this.chunks.push(new Map(entries));
+        } else if (entries !== undefined) {
             for(const [key, value] of entries) {
                 this.set(key, value);
                 // TODO check performance and optimize?
@@ -44,6 +45,7 @@ export class BigMap<K, V> extends Map<K, V> {
     }
 
     public get(key: K): V | undefined {
+        // TODO check performance difference between has and !== undefined
         for (const chunk of this.chunks) {
             if (chunk.has(key)) {
                 return chunk.get(key);
@@ -84,6 +86,8 @@ export class BigMap<K, V> extends Map<K, V> {
     /**
      * Tries to add the key and value to the chunk.
      * 
+     * Assumes that the key does not already exist in the chunk.
+     * 
      * @returns Whether the key and value was successfully added to the chunk; else, the chunk is full.
      */
     private trySet(chunk: Map<K, V>, key: K, value: V): boolean {
@@ -100,7 +104,6 @@ export class BigMap<K, V> extends Map<K, V> {
                 BigMap.maxChunkSize = chunk.size;
             } else throw e;
         }
-
         return false;
     }
 
@@ -205,13 +208,11 @@ export class BigSet<V> extends Set<V> {
 
     /** Where the values are actually stored. The base {@link Set} this {@link BigSet} extends is left empty. */
     private readonly chunks: Set<V>[] = [];
-    /** Rough indication of how many values have been delete, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better value packing, not a rule. */
+    /** Rough indication of how many values have been deleted, and not yet replaced, in all chunks except the final one. Not guarantied to be accurate; use as a suggestion for optimization and better value packing, not a rule. */
     private buriedDeletions: number = 0;
 
     public clear(): void {
-        for (const chunk of this.chunks) {
-            chunk.clear();
-        }
+        this.chunks.length = 0;
         this.buriedDeletions = 0;
     }
 
@@ -228,11 +229,14 @@ export class BigSet<V> extends Set<V> {
         super();
 
         if (values instanceof BigSet) {
-            //clone
+            // clone
             for (const chunk of values.chunks) {
                 this.chunks.push(new Set(chunk));
             }
             this.buriedDeletions = values.buriedDeletions;
+        } else if (values instanceof Set) {
+            // clone
+            this.chunks.push(new Set(values));
         } else if (values !== undefined) {
             for(const value of values) {
                 this.add(value);
@@ -272,6 +276,8 @@ export class BigSet<V> extends Set<V> {
 
     /**
      * Tries to add the value to the chunk.
+     * 
+     * Assumes that the value does not already exist in the chunk.
      * 
      * @returns Whether the value was successfully added to the chunk; else, the chunk is full.
      */
