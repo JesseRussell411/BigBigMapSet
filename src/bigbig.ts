@@ -108,51 +108,53 @@ export class BigMap<K, V> extends Map<K, V> {
     }
 
     public set(key: K, value: V): this {
-        const finalIndex = this.chunks.length - 1;
+        if (this.chunks.length > 0) {
+            const finalIndex = this.chunks.length - 1;
 
-        // replace value if found in any chunk other than the final one
-        for (let i = 0; i < finalIndex; i++) {
-            const chunk = this.chunks[i]!;
-            if (chunk.has(key)) {
-                chunk.set(key, value);
-                return this;
-            }
-        }
-
-        const finalChunk = this.chunks[finalIndex]!
-
-        // check for buried deletions
-        if (this.buriedDeletions > 0) {
-            // replace value if found in final chunk
-            if (finalChunk.has(key)) {
-                finalChunk.set(key, value);
-                return this;
-            }
-
-            // try to add entry to each buried chunk
-            // there might be free spaces in them according to he check above
+            // replace value if found in any chunk other than the final one
             for (let i = 0; i < finalIndex; i++) {
                 const chunk = this.chunks[i]!;
-
-                if (this.trySet(chunk, key, value)) {
-                    // entry added
-                    // definitely not replaced
-                    // because we already try replacing existing entries
-
-                    // one less buried deletion
-                    this.buriedDeletions--;
+                if (chunk.has(key)) {
+                    chunk.set(key, value);
                     return this;
                 }
             }
 
-            // definitely no buried deletions, even though there's recorded to be some
-            // (occurs if the chunk with the deletions was dropped)
-            this.buriedDeletions = 0;
-        }
+            const finalChunk = this.chunks[finalIndex]!
 
-        // try to add entry to final chunk
-        if (this.trySet(finalChunk, key, value)) {
-            return this;
+            // check for buried deletions
+            if (this.buriedDeletions > 0) {
+                // replace value if found in final chunk
+                if (finalChunk.has(key)) {
+                    finalChunk.set(key, value);
+                    return this;
+                }
+
+                // try to add entry to each buried chunk
+                // there might be free spaces in them according to he check above
+                for (let i = 0; i < finalIndex; i++) {
+                    const chunk = this.chunks[i]!;
+
+                    if (this.trySet(chunk, key, value)) {
+                        // entry added
+                        // definitely not replaced
+                        // because we already try replacing existing entries
+
+                        // one less buried deletion
+                        this.buriedDeletions--;
+                        return this;
+                    }
+                }
+
+                // definitely no buried deletions, even though there's recorded to be some
+                // (occurs if the chunk with the deletions was dropped)
+                this.buriedDeletions = 0;
+            }
+
+            // try to add entry to final chunk
+            if (this.trySet(finalChunk, key, value)) {
+                return this;
+            }
         }
 
         // out of space. make new chunk
@@ -302,52 +304,54 @@ export class BigSet<V> extends Set<V> {
         return false;
     }
 
-    public set(value: V): this {
-        const finalIndex = this.chunks.length - 1;
+    public add(value: V): this {
+        if (this.chunks.length > 0) {
+            const finalIndex = this.chunks.length - 1;
 
-        // check if value already exists in any chunk other than the final one
-        for (let i = 0; i < finalIndex; i++) {
-            const chunk = this.chunks[i]!;
-            if (chunk.has(value)) {
-                return this;
-            }
-        }
-
-        const finalChunk = this.chunks[finalIndex]!
-
-        // check for buried deletions
-        if (this.buriedDeletions > 0) {
-            // check if value already exists in final chunk
-            if (finalChunk.has(value)) {
-                return this;
-            }
-
-            // try to add entry to each buried chunk
-            // there might be free spaces in them according to he check above
+            // check if value already exists in any chunk other than the final one
             for (let i = 0; i < finalIndex; i++) {
                 const chunk = this.chunks[i]!;
-
-                if (this.tryAdd(chunk, value)) {
-                    // value added
-                    // definitely not replaced
-                    // because we already checked for existing values
-
-                    // one less buried deletion
-                    this.buriedDeletions--;
+                if (chunk.has(value)) {
                     return this;
                 }
             }
 
-            // definitely no buried deletions, even though there's recorded to be some
-            // (occurs if the chunk with the deletions was dropped)
-            this.buriedDeletions = 0;
-        }
+            const finalChunk = this.chunks[finalIndex]!
 
-        // try to add entry to final chunk
-        if (this.tryAdd(finalChunk, value)) {
-            return this;
-        }
+            // check for buried deletions
+            if (this.buriedDeletions > 0) {
+                // check if value already exists in final chunk
+                if (finalChunk.has(value)) {
+                    return this;
+                }
 
+                // try to add entry to each buried chunk
+                // there might be free spaces in them according to he check above
+                for (let i = 0; i < finalIndex; i++) {
+                    const chunk = this.chunks[i]!;
+
+                    if (this.tryAdd(chunk, value)) {
+                        // value added
+                        // definitely not replaced
+                        // because we already checked for existing values
+
+                        // one less buried deletion
+                        this.buriedDeletions--;
+                        return this;
+                    }
+                }
+
+                // definitely no buried deletions, even though there's recorded to be some
+                // (occurs if the chunk with the deletions was dropped)
+                this.buriedDeletions = 0;
+            }
+
+            // try to add entry to final chunk
+            if (this.tryAdd(finalChunk, value)) {
+                return this;
+            }
+        }
+    
         // out of space. make new chunk
         const newChunk = new Set<V>();
         newChunk.add(value);
