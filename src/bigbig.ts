@@ -95,7 +95,7 @@ export class BigMap<K, V> extends Map<K, V> {
                 return this;
             } catch (e) {
                 if (e instanceof RangeError) {
-                    // do nothing
+                    // final chunk is out of space
                 } else throw e;
             }
         }
@@ -235,7 +235,7 @@ export class BigSet<V> extends Set<V> {
                 return this;
             } catch (e) {
                 if (e instanceof RangeError) {
-                    // do nothing
+                    // final chunk is out of space
                 } else throw e;
             }
         }
