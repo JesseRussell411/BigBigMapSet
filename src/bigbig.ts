@@ -15,15 +15,6 @@ export class BigMap<K, V> extends Map<K, V> {
         this.buriedDeletions = 0;
     }
 
-    public get size(): number {
-        // TODO? cache
-        let result = 0;
-        for (const chunk of this.chunks) {
-            result += chunk.size;
-        }
-        return result;
-    }
-
     public constructor(entries?: Iterable<readonly [K, V]>) {
         super();
 
@@ -42,6 +33,15 @@ export class BigMap<K, V> extends Map<K, V> {
                 // TODO check performance and optimize?
             }
         }
+    }
+
+    public get size(): number {
+        // TODO? cache
+        let result = 0;
+        for (const chunk of this.chunks) {
+            result += chunk.size;
+        }
+        return result;
     }
 
     public get(key: K): V | undefined {
@@ -166,18 +166,21 @@ export class BigMap<K, V> extends Map<K, V> {
         for (const chunk of this.chunks) {
             yield* chunk.entries();
         }
+        return undefined;
     }
 
     public *keys() {
         for (const chunk of this.chunks) {
             yield* chunk.keys();
         }
+        return undefined;
     }
 
     public *values() {
         for (const chunk of this.chunks) {
             yield* chunk.values();
         }
+        return undefined;
     }
 
     public foreach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any) {
@@ -196,6 +199,7 @@ export class BigMap<K, V> extends Map<K, V> {
         for (const chunk of this.chunks) {
             yield* chunk;
         }
+        return undefined;
     }
 }
 
@@ -216,15 +220,6 @@ export class BigSet<V> extends Set<V> {
         this.buriedDeletions = 0;
     }
 
-    public get size(): number {
-        // TODO? cache
-        let result = 0;
-        for (const chunk of this.chunks) {
-            result += chunk.size;
-        }
-        return result;
-    }
-
     public constructor(values?: Iterable<V>) {
         super();
 
@@ -243,6 +238,15 @@ export class BigSet<V> extends Set<V> {
                 // TODO check performance and optimize?
             }
         }
+    }
+
+    public get size(): number {
+        // TODO? cache
+        let result = 0;
+        for (const chunk of this.chunks) {
+            result += chunk.size;
+        }
+        return result;
     }
 
     public has(value: V): boolean {
@@ -355,18 +359,21 @@ export class BigSet<V> extends Set<V> {
         for (const chunk of this.chunks) {
             yield* chunk.entries();
         }
+        return undefined;
     }
 
     public *keys() {
         for (const chunk of this.chunks) {
             yield* chunk.keys();
         }
+        return undefined;
     }
 
     public *values() {
         for (const chunk of this.chunks) {
             yield* chunk.values();
         }
+        return undefined;
     }
 
     public foreach(callbackfn: (value: V, value2: V, set: Set<V>) => void, thisArg?: any) {
@@ -385,5 +392,6 @@ export class BigSet<V> extends Set<V> {
         for (const chunk of this.chunks) {
             yield* chunk;
         }
+        return undefined;
     }
 }
