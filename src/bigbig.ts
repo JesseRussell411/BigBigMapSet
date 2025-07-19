@@ -57,9 +57,7 @@ export class BigMap<K, V> extends Map<K, V> {
     }
 
     public delete(key: K): boolean {
-        const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
-
-        for (let i = 0; i <= finalIndex; i++) {
+        for (let i = 0; i < this.chunks.length; i++) {
             const chunk = this.chunks[i]!;
 
             if (chunk.delete(key)) {
@@ -88,7 +86,7 @@ export class BigMap<K, V> extends Map<K, V> {
                 }
             }
 
-            // try to add entry to the final chunk
+            // try to add the entry to the final chunk
             const finalChunk = this.chunks[finalIndex]!;
             try {
                 finalChunk.set(key, value);
@@ -197,9 +195,7 @@ export class BigSet<V> extends Set<V> {
     }
 
     public delete(value: V): boolean {
-        const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
-
-        for (let i = 0; i <= finalIndex; i++) {
+        for (let i = 0; i < this.chunks.length; i++) {
             const chunk = this.chunks[i]!;
 
             if (chunk.delete(value)) {
@@ -217,7 +213,7 @@ export class BigSet<V> extends Set<V> {
 
     public add(value: V): this {
         if (this.chunks.length > 0) {
-            const finalIndex = this.chunks.length - 1; // if chunks is empty, finalIndex will be -1
+            const finalIndex = this.chunks.length - 1;
 
             // check if found in any chunk other than the final one
             for (let i = 0; i < finalIndex; i++) {
@@ -228,7 +224,7 @@ export class BigSet<V> extends Set<V> {
                 }
             }
 
-            // try to add entry to the final chunk
+            // try to add the value to the final chunk
             const finalChunk = this.chunks[finalIndex]!;
             try {
                 finalChunk.add(value);
