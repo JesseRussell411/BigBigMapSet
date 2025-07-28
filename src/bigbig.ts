@@ -130,7 +130,7 @@ export class BigMap<K, V> extends Map<K, V> {
         return undefined;
     }
 
-    public foreach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any) {
+    public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any) {
         if (arguments.length > 1) {
             for (const chunk of this.chunks) {
                 chunk.forEach(callbackfn, thisArg);
@@ -272,7 +272,7 @@ export class BigSet<V> extends Set<V> {
         return undefined;
     }
 
-    public foreach(callbackfn: (value: V, value2: V, set: Set<V>) => void, thisArg?: any) {
+    public forEach(callbackfn: (value: V, value2: V, set: Set<V>) => void, thisArg?: any) {
         if (arguments.length > 1) {
             for (const chunk of this.chunks) {
                 chunk.forEach(callbackfn, thisArg);
