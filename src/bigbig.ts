@@ -5,6 +5,10 @@ export class BigMap<K, V> extends Map<K, V> {
     /** Where the entries are actually stored. The base {@link Map} this {@link BigMap} extends is left empty. */
     private readonly chunks: Map<K, V>[] = [];
 
+    public get [Symbol.toStringTag]() {
+        return "BigMap";
+    }
+
     public clear(): void {
         this.chunks.length = 0;
     }
@@ -152,6 +156,10 @@ export class BigMap<K, V> extends Map<K, V> {
 export class BigSet<V> extends Set<V> {
     /** Where the values are actually stored. The base {@link Set} this {@link BigSet} extends is left empty. */
     private readonly chunks: Set<V>[] = [];
+
+    public get [Symbol.toStringTag]() {
+        return "BigSet";
+    }
 
     public clear(): void {
         this.chunks.length = 0;

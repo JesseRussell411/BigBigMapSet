@@ -1,0 +1,45 @@
+{
+  "name": "bigbigmapset",
+  "version": "1.0.3",
+  "description": "Extension classes of Map and Set that don't have size limits.",
+  "main": "dist/bigbig.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "map",
+    "set",
+    "bigmap",
+    "gitset",
+    "limit",
+    "collection",
+    "collections",
+    "memory",
+    "big",
+    "data",
+    "bigdata"
+  ],
+  "directories": {
+    "build": "tsc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseRussell411/BigBigMapSet.git"
+  },
+  "author": "Jesse Russell",
+  "license": "ISC",
+  "types": "./dist/bigbig.d.ts",
+  "bugs": {
+    "url": "https://github.com/JesseRussell411/BigBigMapSet/issues"
+  },
+  "homepage": "https://github.com/JesseRussell411/BigBigMapSet#readme",
+  "prettier": {
+    "tabWidth": 4
+  },
+  "dependencies": {
+    "typescript": "^5.8.3"
+  }
+}
