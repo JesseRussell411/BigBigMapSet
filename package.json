@@ -1,6 +1,6 @@
 {
   "name": "bigbigmapset",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Extension classes of Map and Set that don't have size limits.",
   "main": "dist/bigbig.js",
   "files": [
