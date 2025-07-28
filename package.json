@@ -10,14 +10,16 @@
     "map",
     "set",
     "bigmap",
-    "gitset",
+    "bigset",
     "limit",
     "collection",
     "collections",
     "memory",
     "big",
     "data",
-    "bigdata"
+    "bigdata",
+    "runtime_independent",
+    "runtime-independent"
   ],
   "directories": {
     "build": "tsc"
