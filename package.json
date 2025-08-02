@@ -42,6 +42,5 @@
     "tabWidth": 4
   },
   "dependencies": {
-    "typescript": "^5.8.3"
   }
 }
